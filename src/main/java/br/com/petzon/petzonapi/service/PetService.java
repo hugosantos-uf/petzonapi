@@ -2,6 +2,7 @@ package br.com.petzon.petzonapi.service;
 
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
+import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
 import br.com.petzon.petzonapi.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,5 +26,10 @@ public class PetService {
             }
         }
         return petRepository.findAll();
+    }
+
+    public Pet buscarPorId(Long id) {
+        return petRepository.findById(id)
+                .orElseThrow(() -> new PetNaoEncontradoException("Pet não encontrado com o ID: " + id));
     }
 }

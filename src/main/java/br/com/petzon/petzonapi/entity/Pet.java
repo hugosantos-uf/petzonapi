@@ -13,7 +13,7 @@ public class Pet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
     @Enumerated(EnumType.STRING) // Diz ao JPA para salvar o nome do enum ("CACHORRO", "GATO") como String
     @Column(name = "tipo", nullable = false)

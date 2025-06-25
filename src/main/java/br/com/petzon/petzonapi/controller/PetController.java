@@ -1,7 +1,7 @@
 package br.com.petzon.petzonapi.controller;
 
 import br.com.petzon.petzonapi.entity.Pet;
-import br.com.petzon.petzonapi.service.PetService; // MUDANÇA AQUI
+import br.com.petzon.petzonapi.service.PetService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

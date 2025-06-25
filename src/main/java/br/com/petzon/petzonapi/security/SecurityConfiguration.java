@@ -30,6 +30,7 @@ public class SecurityConfiguration {
                 .csrf().disable()
                 .authorizeHttpRequests((authz) -> authz
                         .antMatchers("/api/auth/**").permitAll()
+                        .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ADMIN")
                         .antMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
                         .anyRequest().authenticated()
                 );

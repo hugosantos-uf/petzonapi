@@ -1,5 +1,6 @@
 package br.com.petzon.petzonapi.service;
 
+import br.com.petzon.petzonapi.dto.CreatePetDto;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
@@ -31,5 +32,17 @@ public class PetService {
     public Pet buscarPorId(Integer id) {
         return petRepository.findById(id)
                 .orElseThrow(() -> new PetNaoEncontradoException("Pet não encontrado com o ID: " + id));
+    }
+
+    public Pet cadastrarPet(CreatePetDto petDto) {
+        Pet novoPet = new Pet();
+        novoPet.setTipo(petDto.getTipo());
+        novoPet.setNome(petDto.getNome());
+        novoPet.setTemperamento(petDto.getTemperamento());
+        novoPet.setDescricao(petDto.getDescricao());
+        novoPet.setIdade(petDto.getIdade());
+        novoPet.setUrlFoto(petDto.getUrlFoto());
+
+        return petRepository.save(novoPet);
     }
 }

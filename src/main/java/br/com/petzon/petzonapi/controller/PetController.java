@@ -21,7 +21,7 @@ public class PetController {
     }
 
     @GetMapping("/{id}")
-    public Pet buscarPetPorId(@PathVariable Long id) {
+    public Pet buscarPetPorId(@PathVariable Integer id) {
         return petService.buscarPorId(id);
     }
 }

@@ -28,7 +28,7 @@ public class PetService {
         return petRepository.findAll();
     }
 
-    public Pet buscarPorId(Long id) {
+    public Pet buscarPorId(Integer id) {
         return petRepository.findById(id)
                 .orElseThrow(() -> new PetNaoEncontradoException("Pet não encontrado com o ID: " + id));
     }

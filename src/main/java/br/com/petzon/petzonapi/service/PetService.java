@@ -10,9 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.List;
-
 @Service
 @RequiredArgsConstructor
 public class PetService {
@@ -46,5 +43,23 @@ public class PetService {
         novoPet.setUrlFoto(petDto.getUrlFoto());
 
         return petRepository.save(novoPet);
+    }
+
+    public Pet atualizarPet(Integer id, CreatePetDto petDto) throws PetNaoEncontradoException {
+        Pet petExistente = buscarPorId(id);
+
+        petExistente.setTipo(petDto.getTipo());
+        petExistente.setNome(petDto.getNome());
+        petExistente.setTemperamento(petDto.getTemperamento());
+        petExistente.setDescricao(petDto.getDescricao());
+        petExistente.setIdade(petDto.getIdade());
+        petExistente.setUrlFoto(petDto.getUrlFoto());
+
+        return petRepository.save(petExistente);
+    }
+
+    public void deletarPet(Integer id) throws PetNaoEncontradoException {
+        Pet petParaDeletar = buscarPorId(id);
+        petRepository.delete(petParaDeletar);
     }
 }

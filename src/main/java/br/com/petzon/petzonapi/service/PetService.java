@@ -6,6 +6,8 @@ import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
 import br.com.petzon.petzonapi.repository.PetRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -17,16 +19,16 @@ public class PetService {
 
     private final PetRepository petRepository;
 
-    public List<Pet> listarTodosOuPorTipo(String tipo) {
+    public Page<Pet> listarTodosOuPorTipo(String tipo, Pageable pageable) {
         if (tipo != null) {
             try {
                 PetType petType = PetType.valueOf(tipo.toUpperCase());
-                return petRepository.findByTipo(petType);
+                return petRepository.findByTipo(petType, pageable);
             } catch (IllegalArgumentException e) {
-                return Collections.emptyList();
+                return Page.empty(pageable);
             }
         }
-        return petRepository.findAll();
+        return petRepository.findAll(pageable);
     }
 
     public Pet buscarPorId(Integer id) {

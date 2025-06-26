@@ -30,6 +30,7 @@ public class SecurityConfiguration {
                 .csrf().disable()
                 .authorizeHttpRequests((authz) -> authz
                         .antMatchers("/api/auth/**").permitAll()
+                        .antMatchers(HttpMethod.GET, "/fotos/**").permitAll()
                         .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ADMIN")
                         .antMatchers(HttpMethod.DELETE, "/api/pets").hasRole("ADMIN")
                         .antMatchers(HttpMethod.PUT, "/api/pets").hasRole("ADMIN")

@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -19,6 +20,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
+@EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfiguration {
 
     private final TokenService tokenService;
@@ -31,6 +33,7 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests((authz) -> authz
                         .antMatchers("/api/auth/**").permitAll()
                         .antMatchers(HttpMethod.GET, "/fotos/**").permitAll()
+                        .antMatchers("/ws/**").permitAll()
                         .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ADMIN")
                         .antMatchers(HttpMethod.DELETE, "/api/pets").hasRole("ADMIN")
                         .antMatchers(HttpMethod.PUT, "/api/pets").hasRole("ADMIN")

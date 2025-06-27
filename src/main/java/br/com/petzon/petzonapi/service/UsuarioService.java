@@ -1,6 +1,7 @@
 package br.com.petzon.petzonapi.service;
 
 import br.com.petzon.petzonapi.dto.UsuarioDto;
+import br.com.petzon.petzonapi.dto.UsuarioLogadoDto;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.entity.Cargo;
 import br.com.petzon.petzonapi.entity.Role;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -47,5 +49,24 @@ public class UsuarioService {
 
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
+    }
+
+    public Optional<Usuario> findById(Integer id) {
+        return usuarioRepository.findById(id);
+    }
+
+    public UsuarioLogadoDto getLoggedUser(Integer idUsuario) throws RegraDeNegocioException {
+        Usuario usuario = findById(idUsuario)
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+
+        UsuarioLogadoDto usuarioLogadoDto = new UsuarioLogadoDto();
+        usuarioLogadoDto.setIdUsuario(usuario.getIdUsuario());
+        usuarioLogadoDto.setNome(usuario.getNome());
+        usuarioLogadoDto.setEmail(usuario.getEmail());
+        usuarioLogadoDto.setCargos(usuario.getCargos().stream()
+                .map(Cargo::getAuthority)
+                .collect(Collectors.toSet()));
+
+        return usuarioLogadoDto;
     }
 }

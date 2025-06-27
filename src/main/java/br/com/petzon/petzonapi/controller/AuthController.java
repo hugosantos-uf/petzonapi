@@ -3,6 +3,7 @@ package br.com.petzon.petzonapi.controller;
 import br.com.petzon.petzonapi.dto.LoginDto;
 import br.com.petzon.petzonapi.dto.TokenDto;
 import br.com.petzon.petzonapi.dto.UsuarioDto;
+import br.com.petzon.petzonapi.dto.UsuarioLogadoDto;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.entity.Usuario;
 import br.com.petzon.petzonapi.security.TokenService;
@@ -13,10 +14,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
+
 import javax.validation.Valid;
 
 @RestController
@@ -50,5 +50,14 @@ public class AuthController {
         } catch (RegraDeNegocioException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
+    }
+
+    @GetMapping("/usuario-logado")
+    public ResponseEntity<UsuarioLogadoDto> getLoggedUser() throws RegraDeNegocioException {
+        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Integer idUsuario = Integer.parseInt((String) principal);
+
+        UsuarioLogadoDto usuarioLogadoDto = usuarioService.getLoggedUser(idUsuario);
+        return ResponseEntity.ok(usuarioLogadoDto);
     }
 }

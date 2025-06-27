@@ -3,19 +3,19 @@ package br.com.petzon.petzonapi.entity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.*; // Atenção ao import: javax.persistence
+import javax.persistence.*;
 
 @Entity
-@Table(name = "pets") // Mapeia esta classe para a tabela "pets" que criamos
-@Data // Lombok: gera getters, setters, toString, etc.
-@NoArgsConstructor // Lombok: gera um construtor sem argumentos, exigido pelo JPA
+@Table(name = "pets")
+@Data
+@NoArgsConstructor
 public class Pet {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Enumerated(EnumType.STRING) // Diz ao JPA para salvar o nome do enum ("CACHORRO", "GATO") como String
+    @Enumerated(EnumType.STRING)
     @Column(name = "tipo", nullable = false)
     private PetType tipo;
 

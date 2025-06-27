@@ -25,7 +25,7 @@ public class Usuario implements UserDetails {
     @Column(name = "email")
     private String email;
 
-    @JsonIgnore // A senha nunca deve ser retornada em uma resposta JSON
+    @JsonIgnore
     @Column(name = "senha")
     private String senha;
 

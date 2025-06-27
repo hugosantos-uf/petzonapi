@@ -46,6 +46,13 @@ public class TokenService {
                         .compact();
     }
 
+    public String getTokenFromHeader(String header) {
+        if (header == null || !header.startsWith(TOKEN_PREFIX)) {
+            return null;
+        }
+        return header.replace(TOKEN_PREFIX, "").trim();
+    }
+
     public UsernamePasswordAuthenticationToken isValid(String token) {
         if (token != null) {
             try {

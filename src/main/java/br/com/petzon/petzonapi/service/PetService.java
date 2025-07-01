@@ -1,12 +1,15 @@
 package br.com.petzon.petzonapi.service;
 
-import br.com.petzon.petzonapi.dto.CreatePetDto;
+import br.com.petzon.petzonapi.dto.PetRequest;
+import br.com.petzon.petzonapi.dto.PetResponse;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.entity.Usuario;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.PetRepository;
+import br.com.petzon.petzonapi.repository.UsuarioRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -21,20 +24,18 @@ import java.net.URL;
 @RequiredArgsConstructor
 public class PetService {
 
+    private final ObjectMapper objectMapper;
     private final PetRepository petRepository;
     private final S3Service s3Service;
-    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
 
-    public Page<Pet> listarTodosOuPorTipo(String tipo, Pageable pageable) {
-        if (tipo != null) {
+    public Page<Pet> listarPorTipo(String tipo, Pageable pageable) {
             try {
                 PetType petType = PetType.valueOf(tipo.toUpperCase());
                 return petRepository.findByTipo(petType, pageable);
             } catch (IllegalArgumentException e) {
                 return Page.empty(pageable);
             }
-        }
-        return petRepository.findAll(pageable);
     }
 
     public Pet buscarPorId(int id) throws PetNaoEncontradoException {
@@ -42,28 +43,25 @@ public class PetService {
                 .orElseThrow(() -> new PetNaoEncontradoException("Pet não encontrado com o ID: " + id));
     }
 
-    public Pet cadastrarPet(CreatePetDto petDto, MultipartFile imagem) throws IOException, RegraDeNegocioException {
+    public PetResponse cadastrarPet(PetRequest petRequest, MultipartFile imagem) throws IOException, RegraDeNegocioException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int idUsuarioLogado = Integer.parseInt((String) principal);
 
-        Usuario responsavel = usuarioService.findById(idUsuarioLogado)
+        Usuario responsavel = usuarioRepository.findById(idUsuarioLogado)
                 .orElseThrow(() -> new RegraDeNegocioException("Usuário responsável não encontrado."));
 
         URL imageUrl = s3Service.uploadFile(imagem);
 
-        Pet novoPet = new Pet();
-        novoPet.setTipo(petDto.getTipo());
-        novoPet.setNome(petDto.getNome());
-        novoPet.setTemperamento(petDto.getTemperamento());
-        novoPet.setDescricao(petDto.getDescricao());
-        novoPet.setIdade(petDto.getIdade());
-        novoPet.setUrlFoto(imageUrl.toString());
-        novoPet.setResponsavel(responsavel);
+        Pet newPet = objectMapper.convertValue(petRequest, Pet.class);
+        newPet.setUrlFoto(imageUrl.toString());
+        newPet.setResponsavel(responsavel);
 
-        return petRepository.save(novoPet);
+        Pet petCriado = petRepository.save(newPet);
+
+        return objectMapper.convertValue(petCriado, PetResponse.class);
     }
 
-    public Pet atualizarPet(Integer id, CreatePetDto petDto, MultipartFile imagem) throws PetNaoEncontradoException, IOException {
+    public PetResponse atualizarPet(int id, PetRequest petDto, MultipartFile imagem) throws PetNaoEncontradoException, IOException {
         Pet petExistente = buscarPorId(id);
 
         if (imagem != null && !imagem.isEmpty()) {
@@ -77,7 +75,9 @@ public class PetService {
         petExistente.setDescricao(petDto.getDescricao());
         petExistente.setIdade(petDto.getIdade());
 
-        return petRepository.save(petExistente);
+        Pet petAtualizado = petRepository.save(petExistente);
+
+        return objectMapper.convertValue(petAtualizado, PetResponse.class);
     }
 
     public void deletarPet(Integer id) throws PetNaoEncontradoException {

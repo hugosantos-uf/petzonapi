@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.PositiveOrZero;
 
 @Data
-public class CreatePetDto {
+public class PetRequest {
     @NotNull
     private PetType tipo;
 
@@ -23,8 +23,5 @@ public class CreatePetDto {
     @NotNull
     @PositiveOrZero
     private Integer idade;
-
-    @NotBlank
-    private String urlFoto;
 }
 

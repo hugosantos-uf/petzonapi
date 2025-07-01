@@ -1,7 +1,7 @@
 package br.com.petzon.petzonapi.security;
 
 import br.com.petzon.petzonapi.entity.Usuario;
-import br.com.petzon.petzonapi.service.UsuarioService;
+import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -14,11 +14,11 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AuthenticationService implements UserDetailsService {
 
-    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Optional<Usuario> usuarioEntityOptional = usuarioService.findByEmail(username);
+        Optional<Usuario> usuarioEntityOptional = usuarioRepository.findByEmail(username);
 
         return usuarioEntityOptional
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario Invalido"))

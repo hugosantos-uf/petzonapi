@@ -1,9 +1,9 @@
 package br.com.petzon.petzonapi.controller;
 
-import br.com.petzon.petzonapi.dto.LoginDto;
-import br.com.petzon.petzonapi.dto.TokenDto;
-import br.com.petzon.petzonapi.dto.UsuarioCreateDto;
-import br.com.petzon.petzonapi.dto.UsuarioDto;
+import br.com.petzon.petzonapi.dto.LoginRequest;
+import br.com.petzon.petzonapi.dto.LoginResponse;
+import br.com.petzon.petzonapi.dto.UsuarioRequest;
+import br.com.petzon.petzonapi.dto.UsuarioResponse;
 import br.com.petzon.petzonapi.entity.Usuario;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.security.TokenService;
@@ -29,9 +29,9 @@ public class AuthController {
     private final UsuarioService usuarioService;
 
     @PostMapping("/login")
-    public ResponseEntity<TokenDto> login(@RequestBody @Valid LoginDto loginDto) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest loginRequest) {
         UsernamePasswordAuthenticationToken userAuth =
-                new UsernamePasswordAuthenticationToken(loginDto.getEmail(), loginDto.getSenha());
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getSenha());
 
         Authentication authentication = authenticationManager.authenticate(userAuth);
         Object principal = authentication.getPrincipal();
@@ -39,13 +39,13 @@ public class AuthController {
 
         String token = tokenService.generateToken(usuarioAutenticado);
 
-        return ResponseEntity.ok(new TokenDto(token));
+        return ResponseEntity.ok(new LoginResponse(token));
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UsuarioDto> register(@RequestBody @Valid UsuarioCreateDto usuarioCreateDto) {
+    public ResponseEntity<UsuarioResponse> register(@RequestBody @Valid UsuarioRequest usuarioRequest) {
         try {
-            UsuarioDto usuarioCriado = usuarioService.criarUsuario(usuarioCreateDto);
+            UsuarioResponse usuarioCriado = usuarioService.criarUsuario(usuarioRequest);
             return new ResponseEntity<>(usuarioCriado, HttpStatus.CREATED);
         } catch (RegraDeNegocioException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
@@ -53,11 +53,11 @@ public class AuthController {
     }
 
     @GetMapping("/usuario-logado")
-    public ResponseEntity<UsuarioDto> getLoggedUser() throws RegraDeNegocioException {
+    public ResponseEntity<UsuarioResponse> getLoggedUser() throws RegraDeNegocioException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Integer idUsuario = Integer.parseInt((String) principal);
 
-        UsuarioDto UsuarioDto = usuarioService.getLoggedUser(idUsuario);
-        return ResponseEntity.ok(UsuarioDto);
+        UsuarioResponse UsuarioResponse = usuarioService.getLoggedUser(idUsuario);
+        return ResponseEntity.ok(UsuarioResponse);
     }
 }

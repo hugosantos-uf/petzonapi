@@ -8,6 +8,7 @@ import br.com.petzon.petzonapi.entity.Usuario;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.ChatMessageRepository;
+import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -18,11 +19,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
-    private final UsuarioService usuarioService;
+    private final UsuarioRepository usuarioRepository;
     private final PetService petService;
 
     public ChatMessage save(ChatMessageDto chatMessageDto, int senderId, String conversationId) throws RegraDeNegocioException, PetNaoEncontradoException {
-        Usuario sender = usuarioService.findById(senderId)
+        Usuario sender = usuarioRepository.findById(senderId)
                 .orElseThrow(() -> new RegraDeNegocioException("Remetente não encontrado"));
 
         int petId = Integer.parseInt(conversationId);
@@ -35,7 +36,7 @@ public class ChatMessageService {
         }
 
         if (sender.getIdUsuario().equals(recipient.getIdUsuario())) {
-            recipient = usuarioService.findById(chatMessageDto.getRecipientId())
+            recipient = usuarioRepository.findById(chatMessageDto.getRecipientId())
                     .orElseThrow(() -> new RegraDeNegocioException("Destinatário da resposta não encontrado."));
         }
 

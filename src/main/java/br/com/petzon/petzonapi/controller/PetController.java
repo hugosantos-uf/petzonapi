@@ -1,17 +1,17 @@
 package br.com.petzon.petzonapi.controller;
 
-import br.com.petzon.petzonapi.dto.CreatePetDto;
+import br.com.petzon.petzonapi.dto.PetRequest;
+import br.com.petzon.petzonapi.dto.PetResponse;
 import br.com.petzon.petzonapi.entity.Pet;
+import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.service.PetService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,13 +24,12 @@ import java.io.IOException;
 public class PetController {
 
     private final PetService petService;
-    private final ObjectMapper objectMapper;
 
     @GetMapping
-    public Page<Pet> listarPets(
-            @RequestParam(required = false) String tipo,
+    public Page<Pet> listarPetsPorTipo(
+            @RequestParam String tipo,
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
-        return petService.listarTodosOuPorTipo(tipo, pageable);
+        return petService.listarPorTipo(tipo, pageable);
     }
 
     @GetMapping("/{id}")
@@ -38,30 +37,45 @@ public class PetController {
         return petService.buscarPorId(id);
     }
 
-    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Pet> cadastrarPet(
-            @RequestPart("pet") String petJson, // 1. Recebe a parte "pet" como uma String
-            @RequestPart("imagem") MultipartFile imagem) throws IOException, RegraDeNegocioException {
+    @PostMapping
+    public ResponseEntity<PetResponse> cadastrarPet(
+            @RequestParam("nome") String nome,
+            @RequestParam("tipo") PetType tipo,
+            @RequestParam("temperamento") String temperamento,
+            @RequestParam("idade") int idade,
+            @RequestParam("descricao") String descricao,
+            @RequestParam("foto") MultipartFile foto) throws IOException, RegraDeNegocioException {
 
-        // 2. Converte manualmente a string JSON para o objeto DTO
-        CreatePetDto petDto = objectMapper.readValue(petJson, CreatePetDto.class);
+        PetRequest pet = new PetRequest();
+        pet.setNome(nome);
+        pet.setTipo(tipo);
+        pet.setTemperamento(temperamento);
+        pet.setIdade(idade);
+        pet.setDescricao(descricao);
 
-        Pet petSalvo = petService.cadastrarPet(petDto, imagem);
+        PetResponse petSalvo = petService.cadastrarPet(pet, foto);
         return new ResponseEntity<>(petSalvo, HttpStatus.CREATED);
     }
 
-    // *** E A MESMA CORREÇÃO APLICADA NO UPDATE ***
-    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public ResponseEntity<Pet> atualizarPet(
+    @PutMapping("/{id}")
+    public ResponseEntity<PetResponse> atualizarPet(
             @PathVariable Integer id,
-            @RequestPart("pet") String petJson, // Recebe como String
-            @RequestPart(value = "imagem", required = false) MultipartFile imagem) {
+            @RequestParam("nome") String nome,
+            @RequestParam("tipo") PetType tipo,
+            @RequestParam("temperamento") String temperamento,
+            @RequestParam("idade") int idade,
+            @RequestParam("descricao") String descricao,
+            @RequestParam("foto") MultipartFile foto) {
+
+        PetRequest pet = new PetRequest();
+        pet.setNome(nome);
+        pet.setTipo(tipo);
+        pet.setTemperamento(temperamento);
+        pet.setIdade(idade);
+        pet.setDescricao(descricao);
 
         try {
-            // Converte manualmente
-            CreatePetDto petDto = objectMapper.readValue(petJson, CreatePetDto.class);
-
-            Pet petAtualizado = petService.atualizarPet(id, petDto, imagem);
+            PetResponse petAtualizado = petService.atualizarPet(id, pet, foto);
             return ResponseEntity.ok(petAtualizado);
         } catch (PetNaoEncontradoException e) {
             return ResponseEntity.notFound().build();

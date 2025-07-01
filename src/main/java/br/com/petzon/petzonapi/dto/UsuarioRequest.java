@@ -7,7 +7,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 @Data
-public class UsuarioCreateDto {
+public class UsuarioRequest {
     @NotBlank
     private String nome;
 

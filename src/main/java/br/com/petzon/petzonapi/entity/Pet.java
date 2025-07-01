@@ -1,5 +1,6 @@
 package br.com.petzon.petzonapi.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -33,4 +34,9 @@ public class Pet {
 
     @Column(name = "url_foto", nullable = false)
     private String urlFoto;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsavel_id")
+    @JsonIgnore
+    private Usuario responsavel;
 }

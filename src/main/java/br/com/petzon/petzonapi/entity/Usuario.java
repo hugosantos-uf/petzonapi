@@ -5,8 +5,10 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import javax.persistence.*;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @Getter
@@ -40,6 +42,10 @@ public class Usuario implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "id_cargo")
     )
     private Set<Cargo> cargos;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "responsavel", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Pet> petsGerenciados;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

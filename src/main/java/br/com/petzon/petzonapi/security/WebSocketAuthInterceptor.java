@@ -34,7 +34,8 @@ public class WebSocketAuthInterceptor implements ChannelInterceptor {
                 accessor.setUser(authentication);
                 log.info("Usuário conectado ao WebSocket: {}", authentication.getPrincipal());
             } else {
-                throw new AuthenticationException("Token JWT inválido ou ausente para conexão WebSocket.") {};
+                throw new AuthenticationException("Token JWT inválido ou ausente para conexão WebSocket.") {
+                };
             }
         }
         return message;

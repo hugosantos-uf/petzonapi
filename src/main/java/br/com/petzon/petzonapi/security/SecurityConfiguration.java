@@ -20,7 +20,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true) // Necessário para @PreAuthorize
 public class SecurityConfiguration {
 
     private final TokenService tokenService;
@@ -31,13 +31,25 @@ public class SecurityConfiguration {
                 .cors().and()
                 .csrf().disable()
                 .authorizeHttpRequests((authz) -> authz
-                        .antMatchers("/api/auth/**").permitAll()
-                        .antMatchers(HttpMethod.GET, "/fotos/**").permitAll()
-                        .antMatchers("/ws/**").permitAll()
-                        .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ADMIN")
-                        .antMatchers(HttpMethod.DELETE, "/api/pets").hasRole("ADMIN")
-                        .antMatchers(HttpMethod.PUT, "/api/pets").hasRole("ADMIN")
+                        // --- Rotas Públicas ---
+                        .antMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .antMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
+                        .antMatchers("/ws/**").permitAll()
+
+                        // --- Rotas de ONG ---
+                        .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ONG")
+                        .antMatchers(HttpMethod.PUT, "/api/pets/**").hasRole("ONG")
+                        .antMatchers(HttpMethod.DELETE, "/api/pets/**").hasRole("ONG")
+                        .antMatchers("/api/ong/**").hasRole("ONG") // <-- NOVA REGRA PARA O ONG CONTROLLER
+
+                        // --- Rotas de ADMIN ---
+                        .antMatchers("/api/admin/**").hasRole("ADMIN")
+
+                        // --- Rotas de Usuário Logado ---
+                        .antMatchers(HttpMethod.GET, "/api/auth/usuario-logado").authenticated()
+                        .antMatchers(HttpMethod.GET, "/api/chat/history/**").hasAnyRole("ONG", "USER")
+
+                        // Qualquer outra requisição precisa de autenticação
                         .anyRequest().authenticated()
                 );
         http.addFilterBefore(new TokenAuthenticationFilter(tokenService), UsernamePasswordAuthenticationFilter.class);
@@ -51,7 +63,8 @@ public class SecurityConfiguration {
                 "/v3/api-docs",
                 "/v3/api-docs/**",
                 "/swagger-resources/**",
-                "/swagger-ui/**");}
+                "/swagger-ui/**");
+    }
 
     @Bean
     WebMvcConfigurer corsConfigurer() {
@@ -71,7 +84,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder(){
+    public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 }

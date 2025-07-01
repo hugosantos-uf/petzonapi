@@ -2,10 +2,10 @@ package br.com.petzon.petzonapi.controller;
 
 import br.com.petzon.petzonapi.dto.LoginDto;
 import br.com.petzon.petzonapi.dto.TokenDto;
+import br.com.petzon.petzonapi.dto.UsuarioCreateDto;
 import br.com.petzon.petzonapi.dto.UsuarioDto;
-import br.com.petzon.petzonapi.dto.UsuarioLogadoDto;
-import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.entity.Usuario;
+import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.security.TokenService;
 import br.com.petzon.petzonapi.service.UsuarioService;
 import lombok.RequiredArgsConstructor;
@@ -43,21 +43,21 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Void> register(@RequestBody @Valid UsuarioDto usuarioDto) {
+    public ResponseEntity<UsuarioDto> register(@RequestBody @Valid UsuarioCreateDto usuarioCreateDto) {
         try {
-            usuarioService.criarUsuario(usuarioDto);
-            return ResponseEntity.ok().build();
+            UsuarioDto usuarioCriado = usuarioService.criarUsuario(usuarioCreateDto);
+            return new ResponseEntity<>(usuarioCriado, HttpStatus.CREATED);
         } catch (RegraDeNegocioException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @GetMapping("/usuario-logado")
-    public ResponseEntity<UsuarioLogadoDto> getLoggedUser() throws RegraDeNegocioException {
+    public ResponseEntity<UsuarioDto> getLoggedUser() throws RegraDeNegocioException {
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         Integer idUsuario = Integer.parseInt((String) principal);
 
-        UsuarioLogadoDto usuarioLogadoDto = usuarioService.getLoggedUser(idUsuario);
-        return ResponseEntity.ok(usuarioLogadoDto);
+        UsuarioDto UsuarioDto = usuarioService.getLoggedUser(idUsuario);
+        return ResponseEntity.ok(UsuarioDto);
     }
 }

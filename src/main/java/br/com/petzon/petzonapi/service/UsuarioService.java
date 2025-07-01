@@ -1,11 +1,11 @@
 package br.com.petzon.petzonapi.service;
 
+import br.com.petzon.petzonapi.dto.UsuarioCreateDto;
 import br.com.petzon.petzonapi.dto.UsuarioDto;
-import br.com.petzon.petzonapi.dto.UsuarioLogadoDto;
-import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.entity.Cargo;
 import br.com.petzon.petzonapi.entity.Role;
 import br.com.petzon.petzonapi.entity.Usuario;
+import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.CargoRepository;
 import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +13,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -26,25 +27,27 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
 
 
-    public Usuario criarUsuario(UsuarioDto usuarioDto) throws RegraDeNegocioException {
-        if (usuarioRepository.findByEmail(usuarioDto.getEmail()).isPresent()) {
+    public UsuarioDto criarUsuario(UsuarioCreateDto usuarioCreateDto) throws RegraDeNegocioException {
+        if (usuarioRepository.findByEmail(usuarioCreateDto.getEmail()).isPresent()) {
             throw new RegraDeNegocioException("Email já cadastrado!");
         }
 
         Usuario novoUsuario = new Usuario();
-        novoUsuario.setNome(usuarioDto.getNome());
-        novoUsuario.setEmail(usuarioDto.getEmail());
-        novoUsuario.setSenha(passwordEncoder.encode(usuarioDto.getSenha()));
+        novoUsuario.setNome(usuarioCreateDto.getNome());
+        novoUsuario.setEmail(usuarioCreateDto.getEmail());
+        novoUsuario.setSenha(passwordEncoder.encode(usuarioCreateDto.getSenha()));
         novoUsuario.setAtivo(true);
 
         Cargo cargoUsuario = cargoRepository.findByNome("ROLE_" + Role.USER.name())
-                .orElseThrow(() -> new RegraDeNegocioException("Cargo 'ROLE_USER' não encontrado no banco. Execute os scripts iniciais."));
+                .orElseThrow(() -> new RegraDeNegocioException("Cargo 'ROLE_USER' não encontrado."));
 
         Set<Cargo> cargos = new HashSet<>();
         cargos.add(cargoUsuario);
         novoUsuario.setCargos(cargos);
 
-        return usuarioRepository.save(novoUsuario);
+        Usuario usuarioSalvo = usuarioRepository.save(novoUsuario);
+
+        return mapToDto(usuarioSalvo);
     }
 
     public Optional<Usuario> findByEmail(String email) {
@@ -55,18 +58,47 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    public UsuarioLogadoDto getLoggedUser(Integer idUsuario) throws RegraDeNegocioException {
+    public UsuarioDto getLoggedUser(Integer idUsuario) throws RegraDeNegocioException {
         Usuario usuario = findById(idUsuario)
                 .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
 
-        UsuarioLogadoDto usuarioLogadoDto = new UsuarioLogadoDto();
-        usuarioLogadoDto.setIdUsuario(usuario.getIdUsuario());
-        usuarioLogadoDto.setNome(usuario.getNome());
-        usuarioLogadoDto.setEmail(usuario.getEmail());
-        usuarioLogadoDto.setCargos(usuario.getCargos().stream()
+        UsuarioDto UsuarioDto = new UsuarioDto();
+        UsuarioDto.setIdUsuario(usuario.getIdUsuario());
+        UsuarioDto.setNome(usuario.getNome());
+        UsuarioDto.setEmail(usuario.getEmail());
+        UsuarioDto.setCargos(usuario.getCargos().stream()
                 .map(Cargo::getAuthority)
                 .collect(Collectors.toSet()));
 
-        return usuarioLogadoDto;
+        return UsuarioDto;
+    }
+
+    public List<UsuarioDto> listarUsuarios() {
+        return usuarioRepository.findAll().stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public UsuarioDto promoverParaOng(Integer idUsuario) throws RegraDeNegocioException {
+        Usuario usuario = findById(idUsuario)
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado."));
+
+        Cargo cargoOng = cargoRepository.findByNome("ROLE_ONG")
+                .orElseThrow(() -> new RegraDeNegocioException("Cargo 'ROLE_ONG' não encontrado."));
+
+        usuario.getCargos().add(cargoOng);
+        usuarioRepository.save(usuario);
+        return mapToDto(usuario);
+    }
+
+    private UsuarioDto mapToDto(Usuario usuario) {
+        UsuarioDto dto = new UsuarioDto();
+        dto.setIdUsuario(usuario.getIdUsuario());
+        dto.setNome(usuario.getNome());
+        dto.setEmail(usuario.getEmail());
+        dto.setCargos(usuario.getCargos().stream()
+                .map(Cargo::getAuthority)
+                .collect(Collectors.toSet()));
+        return dto;
     }
 }

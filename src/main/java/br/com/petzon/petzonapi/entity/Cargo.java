@@ -3,6 +3,7 @@ package br.com.petzon.petzonapi.entity;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
+
 import javax.persistence.*;
 
 @Getter

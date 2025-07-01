@@ -2,6 +2,7 @@ package br.com.petzon.petzonapi.entity;
 
 import lombok.Getter;
 import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.Instant;
 

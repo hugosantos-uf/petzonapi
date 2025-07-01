@@ -3,6 +3,7 @@ package br.com.petzon.petzonapi.controller;
 import br.com.petzon.petzonapi.dto.CreatePetDto;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
+import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.service.PetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
 import java.io.IOException;
 
 @RequiredArgsConstructor
@@ -38,10 +38,10 @@ public class PetController {
         return petService.buscarPorId(id);
     }
 
-    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Pet> cadastrarPet(
             @RequestPart("pet") String petJson, // 1. Recebe a parte "pet" como uma String
-            @RequestPart("imagem") MultipartFile imagem) throws IOException {
+            @RequestPart("imagem") MultipartFile imagem) throws IOException, RegraDeNegocioException {
 
         // 2. Converte manualmente a string JSON para o objeto DTO
         CreatePetDto petDto = objectMapper.readValue(petJson, CreatePetDto.class);
@@ -51,7 +51,7 @@ public class PetController {
     }
 
     // *** E A MESMA CORREÇÃO APLICADA NO UPDATE ***
-    @PutMapping(value = "/{id}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    @PutMapping(value = "/{id}", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<Pet> atualizarPet(
             @PathVariable Integer id,
             @RequestPart("pet") String petJson, // Recebe como String

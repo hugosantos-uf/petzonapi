@@ -4,8 +4,12 @@ import java.time.Instant;
 
 public interface ConversationSummaryDto {
     String getConversationId();
+
     String getPetNome();
+
     String getUsuarioNome();
+
     String getUltimaMensagem();
+
     Instant getTimestamp();
 }

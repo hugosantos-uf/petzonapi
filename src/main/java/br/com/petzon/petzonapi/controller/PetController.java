@@ -26,14 +26,14 @@ public class PetController {
     private final PetService petService;
 
     @GetMapping
-    public Page<Pet> listarPetsPorTipo(
+    public Page<PetResponse> listarPetsPorTipo(
             @RequestParam String tipo,
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
         return petService.listarPorTipo(tipo, pageable);
     }
 
     @GetMapping("/{id}")
-    public Pet buscarPetPorId(@PathVariable Integer id) {
+    public PetResponse buscarPetPorId(@PathVariable Integer id) {
         return petService.buscarPorId(id);
     }
 

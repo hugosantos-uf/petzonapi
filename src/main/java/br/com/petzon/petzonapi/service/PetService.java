@@ -35,19 +35,23 @@ public class PetService {
     private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
 
     @Cacheable("petsList")
-    public Page<Pet> listarPorTipo(String tipo, Pageable pageable) {
-            try {
-                PetType petType = PetType.valueOf(tipo.toUpperCase());
-                return petRepository.findByTipo(petType, pageable);
-            } catch (IllegalArgumentException e) {
-                return Page.empty(pageable);
-            }
+    public Page<PetResponse> listarPorTipo(String tipo, Pageable pageable) {
+        try {
+            PetType petType = PetType.valueOf(tipo.toUpperCase());
+            Page<Pet> petPage = petRepository.findByTipo(petType, pageable);
+
+            return petPage.map(pet -> objectMapper.convertValue(pet, PetResponse.class));
+
+        } catch (IllegalArgumentException e) {
+            return Page.empty(pageable);
+        }
     }
 
     @Cacheable(value = "petById", key = "#id")
-    public Pet buscarPorId(int id) throws NotFoundException {
-        return petRepository.findById(id)
+    public PetResponse buscarPorId(int id) throws NotFoundException {
+        Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
+        return objectMapper.convertValue(pet, PetResponse.class);
     }
 
     @CacheEvict(value = "petsList", allEntries = true)
@@ -72,7 +76,8 @@ public class PetService {
 
     @CacheEvict(value = "petsList", allEntries = true)
     public PetResponse atualizarPet(int id, PetRequest petDto, MultipartFile imagem) throws NotFoundException, IOException {
-        Pet petExistente = buscarPorId(id);
+        Pet petExistente = petRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
 
         if (imagem != null && !imagem.isEmpty()) {
             URL newImageUrl = s3Service.uploadFile(imagem);
@@ -92,7 +97,8 @@ public class PetService {
 
     @CacheEvict(value = {"petById", "petsList"}, allEntries = true, key = "#id")
     public void deletarPet(int id) throws NotFoundException {
-        Pet petParaDeletar = buscarPorId(id);
+        Pet petParaDeletar = petRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
         petRepository.delete(petParaDeletar);
     }
 

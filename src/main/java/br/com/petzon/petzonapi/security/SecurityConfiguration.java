@@ -35,6 +35,7 @@ public class SecurityConfiguration {
                         .antMatchers("/api/auth/login", "/api/auth/register").permitAll()
                         .antMatchers(HttpMethod.GET, "/api/pets/**").permitAll()
                         .antMatchers("/ws/**").permitAll()
+                        .antMatchers("/actuator/**").permitAll()
 
                         // --- Rotas de ONG ---
                         .antMatchers(HttpMethod.POST, "/api/pets").hasRole("ONG")

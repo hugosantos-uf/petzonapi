@@ -4,7 +4,7 @@ import br.com.petzon.petzonapi.dto.PetRequest;
 import br.com.petzon.petzonapi.dto.PetResponse;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
-import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
+import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.service.PetService;
 import lombok.RequiredArgsConstructor;
@@ -77,7 +77,7 @@ public class PetController {
         try {
             PetResponse petAtualizado = petService.atualizarPet(id, pet, foto);
             return ResponseEntity.ok(petAtualizado);
-        } catch (PetNaoEncontradoException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -89,7 +89,7 @@ public class PetController {
         try {
             petService.deletarPet(id);
             return ResponseEntity.noContent().build();
-        } catch (PetNaoEncontradoException e) {
+        } catch (NotFoundException e) {
             return ResponseEntity.notFound().build();
         }
     }

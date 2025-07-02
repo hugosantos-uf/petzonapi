@@ -5,12 +5,14 @@ import br.com.petzon.petzonapi.dto.PetResponse;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.entity.Usuario;
-import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
+import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.PetRepository;
 import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -19,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -29,6 +32,9 @@ public class PetService {
     private final S3Service s3Service;
     private final UsuarioRepository usuarioRepository;
 
+    private static final List<String> ALLOWED_IMAGE_TYPES = List.of("image/jpeg", "image/png", "image/gif");
+
+    @Cacheable("petsList")
     public Page<Pet> listarPorTipo(String tipo, Pageable pageable) {
             try {
                 PetType petType = PetType.valueOf(tipo.toUpperCase());
@@ -38,17 +44,20 @@ public class PetService {
             }
     }
 
-    public Pet buscarPorId(int id) throws PetNaoEncontradoException {
+    @Cacheable(value = "petById", key = "#id")
+    public Pet buscarPorId(int id) throws NotFoundException {
         return petRepository.findById(id)
-                .orElseThrow(() -> new PetNaoEncontradoException("Pet não encontrado com o ID: " + id));
+                .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
     }
 
+    @CacheEvict(value = "petsList", allEntries = true)
     public PetResponse cadastrarPet(PetRequest petRequest, MultipartFile imagem) throws IOException, RegraDeNegocioException {
+        validateImage(imagem);
         Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         int idUsuarioLogado = Integer.parseInt((String) principal);
 
         Usuario responsavel = usuarioRepository.findById(idUsuarioLogado)
-                .orElseThrow(() -> new RegraDeNegocioException("Usuário responsável não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Usuário responsável não encontrado."));
 
         URL imageUrl = s3Service.uploadFile(imagem);
 
@@ -61,7 +70,8 @@ public class PetService {
         return objectMapper.convertValue(petCriado, PetResponse.class);
     }
 
-    public PetResponse atualizarPet(int id, PetRequest petDto, MultipartFile imagem) throws PetNaoEncontradoException, IOException {
+    @CacheEvict(value = "petsList", allEntries = true)
+    public PetResponse atualizarPet(int id, PetRequest petDto, MultipartFile imagem) throws NotFoundException, IOException {
         Pet petExistente = buscarPorId(id);
 
         if (imagem != null && !imagem.isEmpty()) {
@@ -80,8 +90,20 @@ public class PetService {
         return objectMapper.convertValue(petAtualizado, PetResponse.class);
     }
 
-    public void deletarPet(Integer id) throws PetNaoEncontradoException {
+    @CacheEvict(value = {"petById", "petsList"}, allEntries = true, key = "#id")
+    public void deletarPet(int id) throws NotFoundException {
         Pet petParaDeletar = buscarPorId(id);
         petRepository.delete(petParaDeletar);
+    }
+
+    private void validateImage(MultipartFile image){
+        if (image == null || image.isEmpty()) {
+            throw new RegraDeNegocioException("A foto do pet é obrigatória.");
+        }
+
+        String contentType = image.getContentType();
+        if (contentType == null || !ALLOWED_IMAGE_TYPES.contains(contentType)) {
+            throw new RegraDeNegocioException("Tipo de arquivo inválido. Apenas imagens (JPEG, PNG, GIF) são permitidas. Tipo enviado: " + contentType);
+        }
     }
 }

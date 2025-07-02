@@ -5,11 +5,14 @@ import br.com.petzon.petzonapi.dto.UsuarioResponse;
 import br.com.petzon.petzonapi.entity.Cargo;
 import br.com.petzon.petzonapi.entity.Role;
 import br.com.petzon.petzonapi.entity.Usuario;
+import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.CargoRepository;
 import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -27,7 +30,7 @@ public class UsuarioService {
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper;
 
-    public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest) throws RegraDeNegocioException {
+    public UsuarioResponse criarUsuario(UsuarioRequest usuarioRequest) {
         if (usuarioRepository.findByEmail(usuarioRequest.getEmail()).isPresent()) {
             throw new RegraDeNegocioException("Email já cadastrado!");
         }
@@ -38,7 +41,7 @@ public class UsuarioService {
         novoUsuario.setAtivo(true);
 
         Cargo cargoUsuario = cargoRepository.findByNome("ROLE_" + Role.USER.name())
-                .orElseThrow(() -> new RegraDeNegocioException("Cargo 'ROLE_USER' não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Cargo 'ROLE_USER' não encontrado."));
 
         Set<Cargo> cargos = new HashSet<>();
         cargos.add(cargoUsuario);
@@ -49,34 +52,34 @@ public class UsuarioService {
         return mapToDto(usuarioSalvo);
     }
 
-    public UsuarioResponse getLoggedUser(int idUsuario) throws RegraDeNegocioException {
+    public UsuarioResponse getLoggedUser(int idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         return mapToDto(usuario);
     }
 
-    public List<UsuarioResponse> listarUsuarios() {
-        return usuarioRepository.findAll().stream()
-                .map(this::mapToDto)
-                .collect(Collectors.toList());
+    public Page<UsuarioResponse> listarUsuarios(Pageable pageable) {
+        Page<Usuario> usuariosPage = usuarioRepository.findAll(pageable);
+
+        return usuariosPage.map(this::mapToDto);
     }
 
-    public UsuarioResponse promoverParaOng(int idUsuario) throws RegraDeNegocioException {
+    public UsuarioResponse promoverParaOng(int idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado."));
 
         Cargo cargoOng = cargoRepository.findByNome("ROLE_ONG")
-                .orElseThrow(() -> new RegraDeNegocioException("Cargo 'ROLE_ONG' não encontrado."));
+                .orElseThrow(() -> new NotFoundException("Cargo 'ROLE_ONG' não encontrado."));
 
         usuario.getCargos().add(cargoOng);
         usuarioRepository.save(usuario);
         return mapToDto(usuario);
     }
 
-    public String desativarUsuario(int idUsuario) throws RegraDeNegocioException {
+    public String desativarUsuario(int idUsuario) {
         Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+                .orElseThrow(() -> new NotFoundException("Usuário não encontrado"));
 
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);

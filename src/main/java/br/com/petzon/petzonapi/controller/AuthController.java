@@ -44,12 +44,8 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UsuarioResponse> register(@RequestBody @Valid UsuarioRequest usuarioRequest) {
-        try {
             UsuarioResponse usuarioCriado = usuarioService.criarUsuario(usuarioRequest);
             return new ResponseEntity<>(usuarioCriado, HttpStatus.CREATED);
-        } catch (RegraDeNegocioException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-        }
     }
 
     @GetMapping("/usuario-logado")

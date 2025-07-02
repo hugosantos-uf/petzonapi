@@ -2,7 +2,7 @@ package br.com.petzon.petzonapi.controller;
 
 import br.com.petzon.petzonapi.dto.ChatMessageDto;
 import br.com.petzon.petzonapi.entity.ChatMessage;
-import br.com.petzon.petzonapi.exception.PetNaoEncontradoException;
+import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class ChatController {
     private final ChatMessageService chatMessageService;
 
     @MessageMapping("/chat/{petId}/sendMessage") // Agora o destino é o ID do pet
-    public void sendMessage(@DestinationVariable String petId, @Payload ChatMessageDto chatMessageDto, Authentication authentication) throws RegraDeNegocioException, PetNaoEncontradoException {
+    public void sendMessage(@DestinationVariable String petId, @Payload ChatMessageDto chatMessageDto, Authentication authentication) throws RegraDeNegocioException, NotFoundException {
         int senderId = Integer.parseInt(authentication.getName());
         // Passa o petId como conversationId
         ChatMessage savedMessage = chatMessageService.save(chatMessageDto, senderId, petId);

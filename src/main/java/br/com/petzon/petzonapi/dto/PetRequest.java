@@ -18,6 +18,7 @@ public class PetRequest {
     @NotBlank
     private String temperamento;
 
+    @NotBlank
     private String descricao;
 
     @NotNull

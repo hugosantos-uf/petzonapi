@@ -49,7 +49,7 @@ public class UsuarioService {
         return mapToDto(usuarioSalvo);
     }
 
-    public UsuarioResponse getLoggedUser(Integer idUsuario) throws RegraDeNegocioException {
+    public UsuarioResponse getLoggedUser(int idUsuario) throws RegraDeNegocioException {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
 
@@ -62,7 +62,7 @@ public class UsuarioService {
                 .collect(Collectors.toList());
     }
 
-    public UsuarioResponse promoverParaOng(Integer idUsuario) throws RegraDeNegocioException {
+    public UsuarioResponse promoverParaOng(int idUsuario) throws RegraDeNegocioException {
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado."));
 
@@ -72,6 +72,15 @@ public class UsuarioService {
         usuario.getCargos().add(cargoOng);
         usuarioRepository.save(usuario);
         return mapToDto(usuario);
+    }
+
+    public String desativarUsuario(int idUsuario) throws RegraDeNegocioException {
+        Usuario usuario = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new RegraDeNegocioException("Usuário não encontrado"));
+
+        usuario.setAtivo(false);
+        usuarioRepository.save(usuario);
+        return "Usuário desativado";
     }
 
     private UsuarioResponse mapToDto(Usuario usuario) {

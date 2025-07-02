@@ -22,7 +22,12 @@ public class AdminController {
     }
 
     @PutMapping("/usuarios/{id}/promover-ong")
-    public ResponseEntity<UsuarioResponse> promoverParaOng(@PathVariable Integer id) throws RegraDeNegocioException {
+    public ResponseEntity<UsuarioResponse> promoverParaOng(@PathVariable int id) throws RegraDeNegocioException {
         return ResponseEntity.ok(usuarioService.promoverParaOng(id));
+    }
+
+    @DeleteMapping("/usuarios/{id}")
+    public ResponseEntity<String> desativarUsuario(@PathVariable int id) throws RegraDeNegocioException {
+        return ResponseEntity.ok(usuarioService.desativarUsuario(id));
     }
 }

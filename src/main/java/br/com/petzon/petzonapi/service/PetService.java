@@ -2,6 +2,7 @@ package br.com.petzon.petzonapi.service;
 
 import br.com.petzon.petzonapi.dto.PetRequest;
 import br.com.petzon.petzonapi.dto.PetResponse;
+import br.com.petzon.petzonapi.dto.ResponsavelDto;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.PetType;
 import br.com.petzon.petzonapi.entity.Usuario;
@@ -11,6 +12,7 @@ import br.com.petzon.petzonapi.repository.PetRepository;
 import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PetService {
@@ -40,7 +43,7 @@ public class PetService {
             PetType petType = PetType.valueOf(tipo.toUpperCase());
             Page<Pet> petPage = petRepository.findByTipo(petType, pageable);
 
-            return petPage.map(pet -> objectMapper.convertValue(pet, PetResponse.class));
+            return petPage.map(this::mapToPetResponse);
 
         } catch (IllegalArgumentException e) {
             return Page.empty(pageable);
@@ -51,7 +54,7 @@ public class PetService {
     public PetResponse buscarPorId(int id) throws NotFoundException {
         Pet pet = petRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
-        return objectMapper.convertValue(pet, PetResponse.class);
+        return mapToPetResponse(pet);
     }
 
     @CacheEvict(value = "petsList", allEntries = true)
@@ -71,7 +74,8 @@ public class PetService {
 
         Pet petCriado = petRepository.save(newPet);
 
-        return objectMapper.convertValue(petCriado, PetResponse.class);
+        return mapToPetResponse(petCriado);
+
     }
 
     @CacheEvict(value = "petsList", allEntries = true)
@@ -92,7 +96,7 @@ public class PetService {
 
         Pet petAtualizado = petRepository.save(petExistente);
 
-        return objectMapper.convertValue(petAtualizado, PetResponse.class);
+        return mapToPetResponse(petAtualizado);
     }
 
     @CacheEvict(value = {"petById", "petsList"}, allEntries = true, key = "#id")
@@ -100,6 +104,18 @@ public class PetService {
         Pet petParaDeletar = petRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Pet não encontrado com o ID: " + id));
         petRepository.delete(petParaDeletar);
+    }
+
+    private PetResponse mapToPetResponse(Pet pet) {
+        PetResponse petResponse = objectMapper.convertValue(pet, PetResponse.class);
+
+        if (pet.getResponsavel() != null) {
+            ResponsavelDto responsavelDto = new ResponsavelDto();
+            responsavelDto.setIdUsuario(pet.getResponsavel().getIdUsuario());
+            responsavelDto.setNome(pet.getResponsavel().getNome());
+            petResponse.setResponsavel(responsavelDto);
+        }
+        return petResponse;
     }
 
     private void validateImage(MultipartFile image){

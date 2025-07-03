@@ -2,6 +2,8 @@ package br.com.petzon.petzonapi.exception;
 
 import br.com.petzon.petzonapi.dto.ErrorResponse;
 import br.com.petzon.petzonapi.dto.FieldErrorDetail;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,6 +17,9 @@ import java.util.List;
 
 @ControllerAdvice
 public class CustomGlobalExceptionHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(CustomGlobalExceptionHandler.class);
+
 
     @ExceptionHandler(NotFoundException.class)
     public ResponseEntity<ErrorResponse> handlePetNaoEncontrado(NotFoundException e, HttpServletRequest request) {
@@ -77,6 +82,7 @@ public class CustomGlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGenericException(Exception e, HttpServletRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+        logger.error("Erro interno inesperado", e);
         ErrorResponse errorResponse = new ErrorResponse(
                 Instant.now(),
                 status.value(),

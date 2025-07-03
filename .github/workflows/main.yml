@@ -1,44 +1,34 @@
-# Nome do seu workflow
 name: Deploy Petzon API to EC2
 
-# Gatilho: Este workflow roda a cada push na branch 'main'
 on:
   push:
     branches: [ main ]
 
-# Tarefas (jobs) que o workflow irá executar
 jobs:
   build-and-deploy:
-    # O sistema operacional que o runner do GitHub vai usar
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Baixa o seu código do repositório para o runner
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # 2. Configura o ambiente Java (JDK)
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    # 3. Executa o build com Maven (ele baixa as dependências e gera o .jar)
-    - name: Build with Maven
-      run: mvn clean package -DskipTests
+      - name: Build with Maven
+        run: mvn clean package -DskipTests
 
-    # 4. Copia o .jar para o EC2 e reinicia o serviço
-    - name: Deploy to EC2 with Verbose Logging
-      run: |
-        echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key && chmod 600 private_key
-    
-        echo "--- Attempting SCP with verbose output ---"
-        scp -vvv -o StrictHostKeyChecking=no -i private_key \
-          target/petzonapi-0.0.1-SNAPSHOT.jar \
-          ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
-    
-        echo "--- Attempting SSH with verbose output ---"
-        ssh -vvv -o StrictHostKeyChecking=no -i private_key \
-          ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
-          "sudo systemctl restart minha-app.service"
+      - name: Deploy to EC2
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key && chmod 600 private_key
+          
+          scp -o StrictHostKeyChecking=no -i private_key \
+            target/petzonapi-0.0.1-SNAPSHOT.jar \
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
+
+          ssh -o StrictHostKeyChecking=no -i private_key \
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
+            "sudo systemctl restart minha-app.service"

@@ -29,18 +29,16 @@ jobs:
       run: mvn clean package -DskipTests
 
     # 4. Copia o .jar para o EC2 e reinicia o serviço
-    - name: Deploy to EC2
+    - name: Deploy to EC2 with Verbose Logging
       run: |
-        # Cria um arquivo temporário com a chave SSH a partir do secret
         echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key && chmod 600 private_key
-
-        # Comando SCP para copiar o .jar para o EC2
-        # Certifique-se que o caminho do .jar gerado e o caminho de destino estão corretos
-        scp -o StrictHostKeyChecking=no -i private_key \
+    
+        echo "--- Attempting SCP with verbose output ---"
+        scp -vvv -o StrictHostKeyChecking=no -i private_key \
           target/petzonapi-0.0.1-SNAPSHOT.jar \
           ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ec2-user/
-
-        # Comando SSH para reiniciar o serviço systemd no EC2
-        ssh -o StrictHostKeyChecking=no -i private_key \
+    
+        echo "--- Attempting SSH with verbose output ---"
+        ssh -vvv -o StrictHostKeyChecking=no -i private_key \
           ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
           "sudo systemctl restart minha-app.service"

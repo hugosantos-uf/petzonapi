@@ -63,14 +63,13 @@ public class ChatMessageService {
         ResponsavelDto senderDto = new ResponsavelDto();
         senderDto.setIdUsuario(savedMessage.getSender().getIdUsuario());
         senderDto.setNome(savedMessage.getSender().getNome());
-        senderDto.setEmail(savedMessage.getSender().getEmail()); // <-- ADICIONE ESTA LINHA
+        senderDto.setEmail(savedMessage.getSender().getEmail());
         responseDto.setSender(senderDto);
 
-        // Mapeia o recipient, agora incluindo o email
         ResponsavelDto recipientDto = new ResponsavelDto();
         recipientDto.setIdUsuario(savedMessage.getRecipient().getIdUsuario());
         recipientDto.setNome(savedMessage.getRecipient().getNome());
-        recipientDto.setEmail(savedMessage.getRecipient().getEmail()); // <-- ADICIONE ESTA LINHA
+        recipientDto.setEmail(savedMessage.getRecipient().getEmail());
         responseDto.setRecipient(recipientDto);
 
         return responseDto;

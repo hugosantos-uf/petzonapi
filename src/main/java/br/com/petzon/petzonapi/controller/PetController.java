@@ -25,11 +25,17 @@ public class PetController {
 
     private final PetService petService;
 
-    @GetMapping
+    @GetMapping("/tipo")
     public Page<PetResponse> listarPetsPorTipo(
             @RequestParam String tipo,
             @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
         return petService.listarPorTipo(tipo, pageable);
+    }
+
+    @GetMapping
+    public Page<PetResponse> listarPets(
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return petService.listarTodos(pageable);
     }
 
     @GetMapping("/{id}")

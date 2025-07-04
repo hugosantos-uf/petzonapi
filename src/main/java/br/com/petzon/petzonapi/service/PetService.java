@@ -50,6 +50,18 @@ public class PetService {
         }
     }
 
+    @Cacheable("petsList")
+    public Page<PetResponse> listarTodos(Pageable pageable) {
+        try {
+            Page<Pet> petPage = petRepository.findAll(pageable);
+
+            return petPage.map(this::mapToPetResponse);
+
+        } catch (IllegalArgumentException e) {
+            return Page.empty(pageable);
+        }
+    }
+
     @Cacheable(value = "petById", key = "#id")
     public PetResponse buscarPorId(int id) throws NotFoundException {
         Pet pet = petRepository.findById(id)

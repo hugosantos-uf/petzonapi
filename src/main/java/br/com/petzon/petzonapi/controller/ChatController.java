@@ -1,10 +1,12 @@
 package br.com.petzon.petzonapi.controller;
 
-import br.com.petzon.petzonapi.dto.ChatMessageDto;
+import br.com.petzon.petzonapi.dto.ChatMessageRequest;
+import br.com.petzon.petzonapi.dto.ChatMessageResponseDto;
+import br.com.petzon.petzonapi.dto.ResponsavelDto;
 import br.com.petzon.petzonapi.entity.ChatMessage;
-import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.service.ChatMessageService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -20,18 +22,22 @@ public class ChatController {
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService chatMessageService;
 
-    @MessageMapping("/chat/{petId}/sendMessage") // Agora o destino é o ID do pet
-    public void sendMessage(@DestinationVariable String petId, @Payload ChatMessageDto chatMessageDto, Authentication authentication) throws RegraDeNegocioException, NotFoundException {
-        int senderId = Integer.parseInt(authentication.getName());
-        // Passa o petId como conversationId
-        ChatMessage savedMessage = chatMessageService.save(chatMessageDto, senderId, petId);
+    @MessageMapping("/chat/{conversationId}/sendMessage")
+    public void sendMessage(
+            @DestinationVariable String conversationId,
+            @Payload ChatMessageRequest chatMessageDto,
+            Authentication authentication) {
 
-        String recipientUsername = savedMessage.getRecipient().getEmail();
-        String senderUsername = savedMessage.getSender().getEmail();
+        int senderId = Integer.parseInt(authentication.getName());
+
+        ChatMessageResponseDto messageResponse = chatMessageService.saveAndMapToDto(chatMessageDto, senderId, conversationId);
+
+        String recipientUsername = messageResponse.getRecipient().getEmail(); // Supondo que o DTO tenha o email
+        String senderUsername = messageResponse.getSender().getEmail(); // Supondo que o DTO tenha o email
 
         String privateQueueDestination = "/queue/messages";
 
-        messagingTemplate.convertAndSendToUser(recipientUsername, privateQueueDestination, savedMessage);
-        messagingTemplate.convertAndSendToUser(senderUsername, privateQueueDestination, savedMessage);
+        messagingTemplate.convertAndSendToUser(recipientUsername, privateQueueDestination, messageResponse);
+        messagingTemplate.convertAndSendToUser(senderUsername, privateQueueDestination, messageResponse);
     }
 }

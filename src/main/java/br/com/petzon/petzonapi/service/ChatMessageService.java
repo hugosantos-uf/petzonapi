@@ -1,17 +1,19 @@
 package br.com.petzon.petzonapi.service;
 
-import br.com.petzon.petzonapi.dto.ChatMessageDto;
+import br.com.petzon.petzonapi.dto.ChatMessageRequest;
+import br.com.petzon.petzonapi.dto.ChatMessageResponseDto;
 import br.com.petzon.petzonapi.dto.ConversationSummaryDto;
+import br.com.petzon.petzonapi.dto.ResponsavelDto;
 import br.com.petzon.petzonapi.entity.ChatMessage;
 import br.com.petzon.petzonapi.entity.Pet;
 import br.com.petzon.petzonapi.entity.Usuario;
-import br.com.petzon.petzonapi.exception.NotFoundException;
 import br.com.petzon.petzonapi.exception.RegraDeNegocioException;
 import br.com.petzon.petzonapi.repository.ChatMessageRepository;
 import br.com.petzon.petzonapi.repository.PetRepository;
 import br.com.petzon.petzonapi.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -23,23 +25,24 @@ public class ChatMessageService {
     private final UsuarioRepository usuarioRepository;
     private final PetRepository petRepository;
 
-    public ChatMessage save(ChatMessageDto chatMessageDto, int senderId, String conversationId) throws RegraDeNegocioException, NotFoundException {
+    @Transactional
+    public ChatMessageResponseDto saveAndMapToDto(ChatMessageRequest chatMessageDto, int senderId, String conversationId){
         Usuario sender = usuarioRepository.findById(senderId)
-                .orElseThrow(() -> new NotFoundException("Remetente não encontrado"));
-
-        int petId = Integer.parseInt(conversationId);
-        Pet petDaConversa = petRepository.findById(petId)
-                .orElseThrow(() -> new NotFoundException("Pet não encontrado"));
-
-        Usuario recipient = petDaConversa.getResponsavel();
-
-        if (recipient == null) {
-            throw new RegraDeNegocioException("O pet desta conversa não tem um responsável definido.");
+                .orElseThrow(() -> new RegraDeNegocioException("Remetente não encontrado"));
+        String[] ids = conversationId.split("-");
+        if (ids.length < 2) {
+            throw new RegraDeNegocioException("ID de conversa inválido: " + conversationId);
         }
-
-        if (sender.getIdUsuario().equals(recipient.getIdUsuario())) {
+        Integer petId = Integer.parseInt(ids[1]);
+        Pet petDaConversa = petRepository.findById(petId)
+                .orElseThrow(() -> new RegraDeNegocioException("Pet não encontrado"));
+        Usuario responsavelPeloPet = petDaConversa.getResponsavel();
+        Usuario recipient;
+        if (sender.getIdUsuario().equals(responsavelPeloPet.getIdUsuario())) {
             recipient = usuarioRepository.findById(chatMessageDto.getRecipientId())
-                    .orElseThrow(() -> new NotFoundException("Destinatário da resposta não encontrado."));
+                    .orElseThrow(() -> new RegraDeNegocioException("Destinatário da resposta não encontrado."));
+        } else {
+            recipient = responsavelPeloPet;
         }
 
         ChatMessage message = new ChatMessage();
@@ -49,8 +52,30 @@ public class ChatMessageService {
         message.setConversationId(conversationId);
         message.setTimestamp(Instant.now());
 
-        return chatMessageRepository.save(message);
+        ChatMessage savedMessage = chatMessageRepository.save(message);
+
+        ChatMessageResponseDto responseDto = new ChatMessageResponseDto();
+        responseDto.setId(savedMessage.getId());
+        responseDto.setConversationId(savedMessage.getConversationId());
+        responseDto.setContent(savedMessage.getContent());
+        responseDto.setTimestamp(savedMessage.getTimestamp());
+
+        ResponsavelDto senderDto = new ResponsavelDto();
+        senderDto.setIdUsuario(savedMessage.getSender().getIdUsuario());
+        senderDto.setNome(savedMessage.getSender().getNome());
+        senderDto.setEmail(savedMessage.getSender().getEmail()); // <-- ADICIONE ESTA LINHA
+        responseDto.setSender(senderDto);
+
+        // Mapeia o recipient, agora incluindo o email
+        ResponsavelDto recipientDto = new ResponsavelDto();
+        recipientDto.setIdUsuario(savedMessage.getRecipient().getIdUsuario());
+        recipientDto.setNome(savedMessage.getRecipient().getNome());
+        recipientDto.setEmail(savedMessage.getRecipient().getEmail()); // <-- ADICIONE ESTA LINHA
+        responseDto.setRecipient(recipientDto);
+
+        return responseDto;
     }
+
 
     public List<ChatMessage> getChatHistory(String conversationId) {
         return chatMessageRepository.findByConversationIdOrderByTimestampAsc(conversationId);

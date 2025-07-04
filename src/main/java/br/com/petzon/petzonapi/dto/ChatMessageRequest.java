@@ -6,7 +6,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 
 @Data
-public class ChatMessageDto {
+public class ChatMessageRequest {
     @NotNull
     private Integer recipientId;
     @NotBlank

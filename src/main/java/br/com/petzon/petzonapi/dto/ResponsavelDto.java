@@ -6,4 +6,5 @@ import lombok.Data;
 public class ResponsavelDto {
     private Integer idUsuario;
     private String nome;
+    private String email;
 }

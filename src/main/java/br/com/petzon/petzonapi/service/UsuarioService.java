@@ -86,7 +86,7 @@ public class UsuarioService {
         return "Usuário desativado";
     }
 
-    private UsuarioResponse mapToDto(Usuario usuario) {
+    protected UsuarioResponse mapToDto(Usuario usuario) {
         UsuarioResponse dto = objectMapper.convertValue(usuario, UsuarioResponse.class);
         dto.setCargos(usuario.getCargos().stream()
                 .map(Cargo::getAuthority)

@@ -152,7 +152,7 @@ class UsuarioServiceTest {
 
         String result = usuarioService.desativarUsuario(userId);
 
-        assertEquals("Usuário desativado", result);
+        assertEquals("Usuário desativad", result);
         assertFalse(usuario.isAtivo());
         verify(usuarioRepository).save(usuario);
     }

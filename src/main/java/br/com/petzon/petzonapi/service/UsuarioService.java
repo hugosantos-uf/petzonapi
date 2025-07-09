@@ -72,6 +72,7 @@ public class UsuarioService {
         Cargo cargoOng = cargoRepository.findByNome("ROLE_ONG")
                 .orElseThrow(() -> new NotFoundException("Cargo 'ROLE_ONG' não encontrado."));
 
+        usuario.getCargos().clear();
         usuario.getCargos().add(cargoOng);
         usuarioRepository.save(usuario);
         return mapToDto(usuario);

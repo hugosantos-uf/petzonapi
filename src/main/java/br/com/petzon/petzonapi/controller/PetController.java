@@ -38,6 +38,13 @@ public class PetController {
         return petService.listarTodos(pageable);
     }
 
+    @GetMapping("/nome")
+    public Page<PetResponse> buscarPetPorNome(
+            @RequestParam String nome,
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return petService.buscarPorNome(nome,pageable);
+    }
+
     @GetMapping("/{id}")
     public PetResponse buscarPetPorId(@PathVariable Integer id) {
         return petService.buscarPorId(id);

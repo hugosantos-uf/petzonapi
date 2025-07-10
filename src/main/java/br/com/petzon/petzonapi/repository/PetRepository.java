@@ -11,4 +11,6 @@ import org.springframework.stereotype.Repository;
 public interface PetRepository extends JpaRepository<Pet, Integer> {
 
     Page<Pet> findByTipo(PetType tipo, Pageable pageable);
+
+    Page<Pet> findByNomeContainingIgnoreCase(String nome, Pageable pageable);
 }

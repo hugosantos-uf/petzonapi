@@ -64,6 +64,12 @@ public class UsuarioService {
         return usuariosPage.map(this::mapToDto);
     }
 
+    public Page<UsuarioResponse> findByName(String nome, Pageable pageable){
+        Page<Usuario> usuariosPage = usuarioRepository.findByNomeContainingIgnoreCase(nome,pageable);
+
+        return usuariosPage.map(this::mapToDto);
+    }
+
     public UsuarioResponse promoverParaOng(int idUsuario){
         Usuario usuario = usuarioRepository.findById(idUsuario)
                 .orElseThrow(() -> new NotFoundException("Usuário não encontrado."));

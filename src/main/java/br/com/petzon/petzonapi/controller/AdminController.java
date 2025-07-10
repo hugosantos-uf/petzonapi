@@ -22,6 +22,13 @@ public class AdminController {
         return ResponseEntity.ok(usuarioService.listarUsuarios(pageable));
     }
 
+    @GetMapping("/usuarios/nome")
+    public ResponseEntity<Page<UsuarioResponse>> buscarUsuarioPorNome(
+            @RequestParam String nome,
+            @PageableDefault(size = 10, sort = "nome") Pageable pageable) {
+        return ResponseEntity.ok(usuarioService.findByName(nome,pageable));
+    }
+
     @PutMapping("/usuarios/{id}/promover-ong")
     public ResponseEntity<UsuarioResponse> promoverParaOng(@PathVariable int id){
         return ResponseEntity.ok(usuarioService.promoverParaOng(id));
